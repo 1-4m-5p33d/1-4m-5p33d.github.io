@@ -1,6 +1,6 @@
-import { useCallback, useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { Terminal } from '../terminal/Terminal'
 import { VideoScene } from './VideoScene'
 
@@ -16,8 +16,8 @@ export function CinematicIntro() {
     let trigger: ScrollTrigger | undefined
 
     const softenWheelSpeed = (event: WheelEvent) => {
-      // Keep native scrolling outside the moving video, including the terminal reveal.
-      if (!trigger?.isActive || trigger.progress > .74 || event.ctrlKey || event.deltaY === 0) return
+      // Keep native scrolling outside the pinned cinematic and terminal sequence.
+      if (!trigger?.isActive || event.ctrlKey || event.deltaY === 0) return
 
       const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
         : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? window.innerHeight : 1
@@ -33,7 +33,7 @@ export function CinematicIntro() {
     window.addEventListener('wheel', softenWheelSpeed, { passive: false })
     const ctx = gsap.context(() => {
       const position = { progress: 0 }
-      const timeline = gsap.timeline({ scrollTrigger: { trigger: '.cinematic', start: 'top top', end: '+=3300', scrub: 0.7, pin: true } })
+      const timeline = gsap.timeline({ scrollTrigger: { trigger: '.cinematic', start: 'top top', end: '+=8000', scrub: 1, pin: true } })
       trigger = timeline.scrollTrigger ?? undefined
       timeline
         .to('.opening-fade', { opacity: 0, duration: .5, ease: 'none' }, 0)
@@ -44,6 +44,8 @@ export function CinematicIntro() {
         .to('.intro-two', { opacity: 1, y: 0, duration: 1.1 }, 5.8)
         .to('.scene-fade', { opacity: 1, duration: 2.2 }, 6.8)
         .to('.terminal-wrap', { opacity: 1, y: 0, duration: 1.1 }, 8.1)
+        .to('.typed-command', { width: '9ch', duration: .5, ease: 'steps(9)' }, 9.55)
+        .to('.fetch', { autoAlpha: 1, duration: .2 }, 10.25)
     })
     return () => {
       window.removeEventListener('wheel', softenWheelSpeed)
