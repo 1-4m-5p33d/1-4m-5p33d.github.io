@@ -13,10 +13,30 @@ export function CinematicIntro() {
   useLayoutEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduce || !root.current) return
+    let trigger: ScrollTrigger | undefined
+
+    const softenWheelSpeed = (event: WheelEvent) => {
+      // Keep native scrolling outside the moving video, including the terminal reveal.
+      if (!trigger?.isActive || trigger.progress > .74 || event.ctrlKey || event.deltaY === 0) return
+
+      const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? window.innerHeight : 1
+      const delta = event.deltaY * unit
+      const magnitude = Math.abs(delta)
+      // A gentle curve boosts tiny trackpad movements and compresses sharp wheel flicks.
+      const adjusted = 16 * Math.pow(magnitude / 16, .7)
+
+      event.preventDefault()
+      window.scrollBy(0, Math.sign(delta) * adjusted)
+    }
+
+    window.addEventListener('wheel', softenWheelSpeed, { passive: false })
     const ctx = gsap.context(() => {
       const position = { progress: 0 }
       const timeline = gsap.timeline({ scrollTrigger: { trigger: '.cinematic', start: 'top top', end: '+=3300', scrub: 0.7, pin: true } })
+      trigger = timeline.scrollTrigger ?? undefined
       timeline
+        .to('.opening-fade', { opacity: 0, duration: .5, ease: 'none' }, 0)
         .to(position, { progress: .92, ease: 'none', duration: 6, onUpdate: () => scrubVideo.current(position.progress) })
         .to('.lower-blur', { opacity: 1, duration: 1.8 }, 4.1)
         .to('.intro-one', { opacity: 1, y: 0, duration: 1.1 }, 4.5)
@@ -25,7 +45,10 @@ export function CinematicIntro() {
         .to('.scene-fade', { opacity: 1, duration: 2.2 }, 6.8)
         .to('.terminal-wrap', { opacity: 1, y: 0, duration: 1.1 }, 8.1)
     })
-    return () => ctx.revert()
+    return () => {
+      window.removeEventListener('wheel', softenWheelSpeed)
+      ctx.revert()
+    }
   }, [])
   return <div ref={root} className="cinematic">
     <VideoScene onScrubReady={setScrubber} />
@@ -33,5 +56,6 @@ export function CinematicIntro() {
     <div className="intro-copy"><p className="intro-one">Hi, I&apos;m Aditya Trivedi</p><p className="intro-two">and this is a work in progress</p></div>
     <div className="scene-fade" />
     <div className="terminal-wrap"><Terminal /></div>
+    <div className="opening-fade" aria-hidden="true" />
   </div>
 }
