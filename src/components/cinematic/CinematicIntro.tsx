@@ -33,7 +33,7 @@ export function CinematicIntro() {
     window.addEventListener('wheel', softenWheelSpeed, { passive: false })
     const ctx = gsap.context(() => {
       const position = { progress: 0 }
-      const timeline = gsap.timeline({ scrollTrigger: { trigger: '.cinematic', start: 'top top', end: '+=8000', scrub: 1, pin: true } })
+      const timeline = gsap.timeline({ scrollTrigger: { trigger: '.cinematic', start: 'top top', end: '+=6500', scrub: 1, pin: true } })
       trigger = timeline.scrollTrigger ?? undefined
       timeline
         .to('.opening-fade', { opacity: 0, duration: .5, ease: 'none' }, 0)
